@@ -1,3 +1,5 @@
+addEventListener("error",e=>showErr(e.message));addEventListener("unhandledrejection",e=>showErr(e.reason&&e.reason.message||e.reason));
+function showErr(m){const d=document.createElement("pre");d.style.cssText="color:#ffd27a;padding:1rem;white-space:pre-wrap;direction:ltr;position:relative;z-index:50";d.textContent="Error: "+m;document.body.prepend(d)}
 const S={
   box:["Box","صناديق جاهزة للاستخدام","📦"],
   quick:["Quick","منتجات تسليم سريع","⚡"],
@@ -24,7 +26,8 @@ const N=[
 /* ===== الكود ===== */
 const $=s=>document.querySelector(s),pg=document.body.dataset.page||"home";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const sb=(window.supabase&&!SB_URL.includes("YOUR"))?supabase.createClient(SB_URL,SB_KEY):null;
+let sb=null;try{if(window.supabase&&typeof SB_URL!="undefined"&&!SB_URL.includes("YOUR"))sb=supabase.createClient(SB_URL,SB_KEY)}catch(err){showErr(err.message)}
+const CC=typeof C!="undefined"?C:{};
 let me=null,role="user",uname="",list=[];
 const isPub=()=>role=="admin"||role=="publisher";
 const toast=t=>{const e=document.createElement("div");e.className="ts";e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2800)};
@@ -72,7 +75,7 @@ document.addEventListener("click",async e=>{
 });
 
 (async()=>{
-  await who();list=await prods();
+  try{await who();list=await prods()}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
   const keys=Object.keys(S);
   $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span><b>Torch Store</b><small>متجر الملفات الرقمية</small></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><button class="ib" id="sb" aria-label="بحث">🔍</button><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header><div id="sr" class="fr sr" hidden><input id="q" placeholder="ابحث عن منتج..."><div id="rs"></div></div>`;
   const bn=[["index.html","🏠","الرئيسية","home"],["box.html","📦","Box","box"],["quick.html","⚡","Quick","quick"],["scoreboard.html","🏆","Tab","scoreboard"]];
@@ -99,7 +102,7 @@ document.addEventListener("click",async e=>{
     const id=new URLSearchParams(location.search).get("p");
     const it=id=="publish"?{n:"طلب صلاحية نشر",p:""}:list.find(x=>String(x.id)==id)||{n:"استفسار عام",p:""};
     const msg=`مرحباً Torch Store، أريد: ${it.n} ${it.p}`.trim(),q=encodeURIComponent(msg);
-    const T=[["WhatsApp","💬",C.whatsapp+"?text="+q],["Telegram","✈️",C.telegram+"?text="+q],["Discord","🎮",C.discord],["TikTok","🎵",C.tiktok]];
+    const T=[["WhatsApp","💬",CC.whatsapp+"?text="+q],["Telegram","✈️",CC.telegram+"?text="+q],["Discord","🎮",CC.discord],["TikTok","🎵",CC.tiktok]];
     h=`<h1 class="ti">راسلنا</h1><div class="fr box"><p>طلبك: <b>${esc(it.n)}</b> ${esc(it.p)}</p><p>اختر وين تحب تراسلني:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")}</div><small>عند الضغط تُنسخ رسالتك تلقائياً، الصقها في المحادثة.</small></div>`;
     setTimeout(()=>document.querySelectorAll("[data-cp]").forEach(a=>a.addEventListener("click",()=>{try{navigator.clipboard.writeText(msg)}catch(_){}})));
   }else{h=head+`<div class="g">${list.filter(p=>p.s==pg).map(card).join("")||none}</div>`;}
