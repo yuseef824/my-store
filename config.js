@@ -6,5 +6,5 @@ const C={
   tiktok:"https://www.tiktok.com/@YOUR_USERNAME"
 };
 /* من Supabase: Project Settings ثم API (انسخ Project URL و anon public key) */
-const SB_URL="NEXT_PUBLIC_SUPABASE_URL=https://gsexqbegnatbqxshkxna.supabase.co";
-const SB_KEY="NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Wm-aNSHZGMcfiDeccWfHQQ_PuYCBxJB";
+const SB_URL="YOUR_SUPABASE_URL";
+const SB_KEY="YOUR_SUPABASE_ANON_KEY";
