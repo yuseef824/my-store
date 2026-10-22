@@ -74,8 +74,10 @@ document.addEventListener("click",async e=>{
   if(d.r){const r=await sb.rpc("set_role",{e:$("#re").value.trim(),r:d.r});toast(r.error?r.error.message:"تم ✅")}
 });
 
+const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("انتهت مهلة الاتصال بـ Supabase، تحقق من config.js")),ms))]);
 (async()=>{
-  try{await who();list=await prods()}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
+  $("#m").innerHTML='<p class="sub">جاري التحميل...</p>';
+  try{await TM(who(),5000);list=await TM(prods(),5000)}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
   const keys=Object.keys(S);
   $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span><b>Torch Store</b><small>متجر الملفات الرقمية</small></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><button class="ib" id="sb" aria-label="بحث">🔍</button><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header><div id="sr" class="fr sr" hidden><input id="q" placeholder="ابحث عن منتج..."><div id="rs"></div></div>`;
   const bn=[["index.html","🏠","الرئيسية","home"],["box.html","📦","Box","box"],["quick.html","⚡","Quick","quick"],["scoreboard.html","🏆","Tab","scoreboard"]];
