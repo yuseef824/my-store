@@ -1,6 +1,5 @@
 -- الصق هذا كله في Supabase: SQL Editor ثم Run
-create table profiles(id uuid primary key references auth.users on delete cascade,name text,email text,role text default 'user',avatar_url text);
-alter table profiles add column if not exists avatar_url text;
+create table profiles(id uuid primary key references auth.users on delete cascade,name text,email text,role text default 'user');
 create table products(id bigint generated always as identity primary key,section text,name text,descr text,price text,image_url text,owner uuid references auth.users,owner_name text,created_at timestamptz default now());
 create table likes(product_id bigint references products on delete cascade,user_id uuid references auth.users,primary key(product_id,user_id));
 create table comments(id bigint generated always as identity primary key,product_id bigint references products on delete cascade,user_id uuid references auth.users,user_name text,body text,created_at timestamptz default now());
@@ -28,12 +27,3 @@ create policy "upload images" on storage.objects for insert to authenticated wit
 create policy "read images" on storage.objects for select using(bucket_id='images');
 -- بعد ما تسجل حسابك بالموقع، شغّل هذا السطر مرة وحدة (بدّل الإيميل) حتى تصير أدمن:
 -- update profiles set role='admin' where email='YOUR_EMAIL';
-
--- صور الحسابات
-insert into storage.buckets(id,name,public) values('avatars','avatars',true) on conflict(id) do nothing;
-drop policy if exists "read avatars" on storage.objects;
-create policy "read avatars" on storage.objects for select using(bucket_id='avatars');
-drop policy if exists "upload own avatar" on storage.objects;
-create policy "upload own avatar" on storage.objects for insert to authenticated with check(bucket_id='avatars' and (storage.foldername(name))[1]=auth.uid()::text);
-drop policy if exists "update own avatar" on storage.objects;
-create policy "update own avatar" on storage.objects for update to authenticated using(bucket_id='avatars' and (storage.foldername(name))[1]=auth.uid()::text) with check(bucket_id='avatars' and (storage.foldername(name))[1]=auth.uid()::text);

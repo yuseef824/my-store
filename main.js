@@ -1,13 +1,13 @@
 addEventListener("error",e=>showErr(e.message));addEventListener("unhandledrejection",e=>showErr(e.reason&&e.reason.message||e.reason));
-function showErr(m){if(/Invalid URL|YOUR_SUPABASE|SUPABASE_URL/i.test(String(m)))return;const d=document.createElement("pre");d.className="error-note";d.textContent="تنبيه تقني: "+m;document.body.prepend(d)}
+function showErr(m){const d=document.createElement("pre");d.style.cssText="color:#ffd27a;padding:1rem;white-space:pre-wrap;direction:ltr;position:relative;z-index:50";d.textContent="Error: "+m;document.body.prepend(d)}
 const S={
   box:["Box","صناديق جاهزة للاستخدام","📦"],
   quick:["Quick","منتجات تسليم سريع","⚡"],
   scoreboard:["Tab Scoreboard","لوحات النتائج والتاب","🏆"],
-  blogs:["Plugins","إضافات وبلوقنات ماينكرافت","🧩"],
-  publish:["انشر منتجك","شارك إضافاتك ومنتجاتك مع المجتمع","💰"],
+  blogs:["Plugins","بلوقنات وإضافات جاهزة","🧩"],
+  publish:["انشر منتجك","انشر منتجاتك واربح 80%","💰"],
   news:["News","أخبار المتجر","📰"],
-  server:["صناعة سيرفرات","تجهيز وإعداد سيرفرات Minecraft","🖥️"]
+  server:["صناعة سيرفر","نكمل لك سيرفرك بسعر واضح","🖥️"]
 };
 /* منتجات تجريبية تظهر فقط إذا ما ربطت Supabase */
 const P=[
@@ -26,16 +26,11 @@ const N=[
 /* ===== الكود ===== */
 const $=s=>document.querySelector(s),pg=document.body.dataset.page||"home";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let sb=null;try{if(window.supabase&&typeof SB_URL!=="undefined"&&/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SB_URL)&&typeof SB_KEY!=="undefined"&&SB_KEY.length>30)sb=supabase.createClient(SB_URL,SB_KEY)}catch(err){showErr(err.message)}
+let sb=null;try{if(window.supabase&&typeof SB_URL!="undefined"&&!SB_URL.includes("YOUR"))sb=supabase.createClient(SB_URL,SB_KEY)}catch(err){showErr(err.message)}
 const CC=typeof C!="undefined"?C:{};
-let me=null,role="user",uname="",avatarUrl="",list=[];
+let me=null,role="user",uname="",list=[];
 const isPub=()=>role=="admin"||role=="publisher";
 const toast=t=>{const e=document.createElement("div");e.className="ts";e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2800)};
-const prefs={theme:localStorage.getItem("ts-theme")||"dark",lang:localStorage.getItem("ts-lang")||"ar"};
-function applyPrefs(){document.documentElement.dataset.theme=prefs.theme;document.documentElement.lang=prefs.lang;document.documentElement.dir=prefs.lang==="ar"?"rtl":"ltr";const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=prefs.theme==="light"?"#f5f7fb":"#101522"}
-applyPrefs();
-const avatar=()=>{const label=(uname||me?.email||"U").trim();return avatarUrl?`<img class="avatar avatar-img" src="${esc(avatarUrl)}" alt="الصورة الشخصية">`:`<span class="avatar" aria-label="الحساب">${esc(label.slice(0,1).toUpperCase())}</span>`};
-function settingsUI(){modal(`<h2>إعدادات Torch Store</h2><p class="muted">خصص تجربة الموقع حسب رغبتك.</p><label>المظهر<select id="theme-choice"><option value="dark" ${prefs.theme==="dark"?"selected":""}>داكن</option><option value="light" ${prefs.theme==="light"?"selected":""}>فاتح</option></select></label><label>لغة الموقع<select id="lang-choice"><option value="ar" ${prefs.lang==="ar"?"selected":""}>العربية</option><option value="en" ${prefs.lang==="en"?"selected":""}>English</option></select></label><button class="bt" id="save-prefs">حفظ الإعدادات</button><p class="muted">الإعدادات محفوظة على هذا الجهاز. بعض النصوص والمحتوى قد تبقى باللغة الأصلية.</p>`);$("#save-prefs").onclick=()=>{prefs.theme=$("#theme-choice").value;prefs.lang=$("#lang-choice").value;localStorage.setItem("ts-theme",prefs.theme);localStorage.setItem("ts-lang",prefs.lang);applyPrefs();toast("تم حفظ الإعدادات");setTimeout(()=>location.reload(),350)}}
 const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},85%,58%)'/><stop offset='1' stop-color='#ffd400'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
 const flame=c=>`<svg class="fl ${c||""}" viewBox="0 0 40 64" aria-hidden="true"><rect x="17" y="44" width="6" height="19" rx="2" fill="#8a5a2b"/><path d="M20 2c3 9 14 15 14 29a14 14 0 0 1-28 0c0-7 4-10 6-15 2 4 4 5 5 6 1-6 0-12 3-20z" fill="#ff7a1a"/><path d="M20 24c2 5 7 8 7 14a7 7 0 0 1-14 0c0-4 3-6 4-9 1 2 2 3 3 3z" fill="#ffd27a"/></svg>`;
 const modal=h=>{let m=$("#md");if(!m){m=document.createElement("div");m.id="md";m.className="md";m.onclick=e=>{if(e.target==m)m.hidden=true};document.body.append(m)}m.innerHTML=`<div class="fr box">${h}</div>`;m.hidden=false;return m};
@@ -43,7 +38,7 @@ const modal=h=>{let m=$("#md");if(!m){m=document.createElement("div");m.id="md";
 async function who(){
   if(!sb)return;
   const{data}=await sb.auth.getSession();me=data.session?.user||null;
-  if(me){const r=await sb.from("profiles").select("name,role,avatar_url").eq("id",me.id).maybeSingle();role=r.data?.role||"user";uname=r.data?.name||me.email;avatarUrl=r.data?.avatar_url||me.user_metadata?.avatar_url||""}
+  if(me){const r=await sb.from("profiles").select("name,role").eq("id",me.id).maybeSingle();role=r.data?.role||"user";uname=r.data?.name||me.email}
 }
 async function prods(){
   if(!sb)return P.map(x=>({...x,likes:0}));
@@ -59,10 +54,8 @@ async function authUI(){
   if(me){
     let adm="";
     if(role=="admin"){const{data}=await sb.from("publishers").select("email");
-      adm=`<h3>الناشرون</h3><input id="re" type="email" placeholder="إيميل الناشر الجديد"><button class="bt" data-r="add">إضافة ناشر</button><div>${(data||[]).map(x=>`<p class="cmt">${esc(x.email)} <button class="dl" data-rm="${esc(x.email)}">حذف</button></p>`).join("")||'<p class="cmt">ما اكو ناشرين للحين.</p>'}</div><h3>آخر تذاكر الدعم</h3><div id="admin-tickets"><p class="muted">جاري تحميل التذاكر...</p></div>`}
+      adm=`<h3>الناشرون</h3><input id="re" type="email" placeholder="إيميل الناشر الجديد"><button class="bt" data-r="add">إضافة ناشر</button><div>${(data||[]).map(x=>`<p class="cmt">${esc(x.email)} <button class="dl" data-rm="${esc(x.email)}">حذف</button></p>`).join("")||'<p class="cmt">ما اكو ناشرين للحين.</p>'}</div>`}
     modal(`<h3>⚙️ الإعدادات</h3><p>${esc(me.email)} (${role=="admin"?"أدمن":role=="publisher"?"ناشر":"مستخدم"})</p><label>اسمك<input id="sn" value="${esc(uname)}"></label><button class="bt" id="sv">حفظ الاسم</button><label>كلمة سر جديدة<input id="sp" type="password" minlength="6"></label><button class="bt" id="spb">تغيير كلمة السر</button>${adm}<p></p><button class="bt" id="lo">تسجيل خروج</button>`);
-    if(role==="admin"&&$("#admin-tickets")){sb.from("tickets").select("id,email,kind,subject,status,created_at").order("created_at",{ascending:false}).limit(8).then(({data,error})=>{const el=$("#admin-tickets");if(!el)return;el.innerHTML=error?'<p class="muted">شغّل update.sql لتفعيل التذاكر.</p>':(data||[]).map(t=>`<p class="cmt"><b>#${t.id} ${esc(t.subject)}</b><br><small>${esc(t.email||"")}</small> · ${esc(t.kind)} · ${esc(t.status)}</p>`).join("")||'<p class="muted">لا توجد تذاكر بعد.</p>'})}
-    const avatarInput=$("#avatar-file");$("#avatar-save").onclick=async()=>{const file=avatarInput?.files?.[0];if(!file)return toast("اختر صورة أولاً");if(file.size>2*1024*1024)return toast("حجم الصورة يجب أن يكون أقل من 2MB");if(!/^image\/(png|jpeg|webp)$/.test(file.type))return toast("اختر صورة PNG أو JPG أو WebP");const path=`${me.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;const up=await sb.storage.from("avatars").upload(path,file,{upsert:true,contentType:file.type});if(up.error)return toast("تعذر رفع الصورة: "+up.error.message);const url=sb.storage.from("avatars").getPublicUrl(path).data.publicUrl;const save=await sb.from("profiles").update({avatar_url:url}).eq("id",me.id);if(save.error)return toast("تم رفع الصورة لكن تعذر حفظها: "+save.error.message);avatarUrl=url;toast("تم تحديث الصورة الشخصية");setTimeout(()=>location.reload(),400)};
     $("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};
     $("#sv").onclick=async()=>{const n=$("#sn").value.trim();if(!n)return;const r=await sb.from("profiles").update({name:n}).eq("id",me.id);if(r.error)return toast(r.error.message);uname=n;toast("تم الحفظ ✅")};
     $("#spb").onclick=async()=>{const r=await sb.auth.updateUser({password:$("#sp").value});toast(r.error?r.error.message:"تم تغيير كلمة السر ✅")};
@@ -95,13 +88,12 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   $("#m").innerHTML='<p class="sub">جاري التحميل...</p>';
   try{await TM(who(),5000);list=await TM(prods(),5000)}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
   const keys=Object.keys(S);
-  $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span><b>Torch Store</b><small>متجر الملفات الرقمية</small></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><button class="ib" id="sb" aria-label="بحث">🔍</button><button class="ib settings-btn" id="settings-btn" aria-label="الإعدادات">⚙️</button><button class="ib account-btn" id="ac">${me?avatar()+" "+esc(uname):"👤 دخول"}</button></header><div id="sr" class="fr sr" hidden><input id="q" placeholder="ابحث عن منتج..."><div id="rs"></div></div>`;
+  $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span><b>Torch Store</b><small>متجر الملفات الرقمية</small></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><button class="ib" id="sb" aria-label="بحث">🔍</button><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header><div id="sr" class="fr sr" hidden><input id="q" placeholder="ابحث عن منتج..."><div id="rs"></div></div>`;
   const bn=[["index.html","🏠","الرئيسية","home"],["box.html","📦","Box","box"],["quick.html","⚡","Quick","quick"],["scoreboard.html","🏆","Tab","scoreboard"]];
   const nb=document.createElement("nav");nb.className="bn";
   nb.innerHTML=bn.map(x=>`<a href="${x[0]}"${x[3]==pg?' class="on"':""}>${x[1]}<small>${x[2]}</small></a>`).join("")+`<button id="mn">☰<small>المزيد</small></button>`;document.body.append(nb);
   $("#mn").onclick=()=>modal(`<div class="g ct">${keys.map(k=>`<a class="bt" href="${k}.html">${S[k][2]} ${S[k][0]}</a>`).join("")}</div>`);
   $("#ac").onclick=authUI;
-  $("#settings-btn").onclick=settingsUI;
   $("#sb").onclick=()=>{const b=$("#sr");b.hidden=!b.hidden;if(!b.hidden)$("#q").focus()};
   $("#q").oninput=e=>{const v=e.target.value.trim().toLowerCase();
     $("#rs").innerHTML=v?(list.filter(p=>(p.n+p.d).toLowerCase().includes(v)).map(p=>`<a href="contact.html?p=${p.id}"><b>${esc(p.n)}</b><small>${S[p.s]?S[p.s][1]:""}</small><i>${esc(p.p)}</i></a>`).join("")||"<p>ما لقينا منتج بهذا الاسم.</p>"):""};
@@ -120,19 +112,13 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
     const id=new URLSearchParams(location.search).get("p");
     const it=id=="publish"?{n:"طلب صلاحية نشر",p:""}:list.find(x=>String(x.id)==id)||{n:"استفسار عام",p:""};
     const msg=`مرحباً Torch Store، أريد: ${it.n} ${it.p}`.trim(),q=encodeURIComponent(msg);
-    const T=[["WhatsApp","💬",CC.whatsapp&&CC.whatsapp.includes("X")?"#":CC.whatsapp+"?text="+q],["Telegram","✈️",CC.telegram&&CC.telegram.includes("YOUR")?"#":CC.telegram+"?text="+q],["Discord","🎮",CC.discord&&CC.discord.includes("YOUR")?"#":CC.discord],["TikTok","🎵",CC.tiktok&&CC.tiktok.includes("YOUR")?"#":CC.tiktok]];
-    h=`<h1 class="ti">الدعم والتذاكر</h1><p class="sub">عندك مشكلة أو اقتراح أو طلب إضافة؟ اكتب لنا تفاصيله.</p><form class="fr box" id="ticket-form"><label>نوع التذكرة<select name="kind"><option>مشكلة تقنية</option><option>اقتراح تطوير</option><option>طلب إضافة</option><option>استفسار عن منتج</option></select></label><label>عنوان الطلب<input name="subject" maxlength="100" required value="${esc(it.n)}"></label><label>التفاصيل<textarea name="body" rows="4" maxlength="2000" required placeholder="اشرح لنا طلبك بالتفصيل..."></textarea></label><button class="bt" type="submit">إنشاء التذكرة</button><p class="muted" id="ticket-result">${me?"ستُحفظ التذكرة في حسابك عند إعداد قاعدة البيانات.":"يمكنك إرسال الطلب عبر وسائل التواصل أو تسجيل الدخول لحفظ التذكرة."}</p></form><div class="fr box"><p>أو تواصل معنا مباشرة:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")}</div><small>تأكد من تعديل روابط التواصل داخل config.js قبل النشر.</small></div>`;
+    const T=[["WhatsApp","💬",CC.whatsapp+"?text="+q],["Telegram","✈️",CC.telegram+"?text="+q],["Discord","🎮",CC.discord],["TikTok","🎵",CC.tiktok]];
+    h=`<h1 class="ti">راسلنا</h1><div class="fr box"><p>طلبك: <b>${esc(it.n)}</b> ${esc(it.p)}</p><p>اختر وين تحب تراسلني:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")}</div><small>عند الضغط تُنسخ رسالتك تلقائياً، الصقها في المحادثة.</small></div>`;
     setTimeout(()=>document.querySelectorAll("[data-cp]").forEach(a=>a.addEventListener("click",()=>{try{navigator.clipboard.writeText(msg)}catch(_){}})));
   }else{h=head+`<div class="g">${list.filter(p=>p.s==pg).map(card).join("")||none}</div>`;}
   $("#m").innerHTML=h;
   document.title="Torch Store"+(S[pg]?" | "+S[pg][0]:"");
 
-  if(pg=="contact"){
-    const tf=$("#ticket-form");if(tf)tf.onsubmit=async e=>{e.preventDefault();const fd=new FormData(tf);const payload={kind:fd.get("kind"),subject:fd.get("subject"),body:fd.get("body")};
-      if(sb&&me){const r=await sb.from("tickets").insert({user_id:me.id,email:me.email,kind:payload.kind,subject:payload.subject,body:payload.body});if(r.error){toast("تعذر حفظ التذكرة: "+r.error.message);return}$("#ticket-result").textContent="تم إنشاء التذكرة بنجاح. سنراجعها قريبًا.";tf.reset();toast("تم إرسال التذكرة ✅");return}
-      const message=`Torch Store - ${payload.kind}\n${payload.subject}\n\n${payload.body}\n\nالحساب: ${me?.email||"زائر"}`;try{await navigator.clipboard.writeText(message);$("#ticket-result").textContent="تم نسخ تفاصيل التذكرة. سجّل الدخول لحفظها داخل الموقع، أو الصق النص في رسالة الدعم.";toast("تم نسخ تفاصيل التذكرة")}catch(_){$("#ticket-result").textContent="سجّل الدخول لحفظ التذكرة، أو استخدم وسائل التواصل أدناه."}
-    };
-  }
   if(pg=="publish"){
     $("#cp").oninput=e=>{const v=+e.target.value||0;$("#o").textContent=+(v*.8).toFixed(2);$("#s").textContent=+(v*.2).toFixed(2)};
     const f=$("#pf");if(f)f.onsubmit=async e=>{e.preventDefault();const file=f.im.files[0];let url=null;if(!file)return toast("لازم تضيف صورة للمنتج");if(file.size>3e6)return toast("الصورة كبيرة، الحد 3MB");
