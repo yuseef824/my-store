@@ -1,0 +1,23 @@
+name: Build EXE
+on:
+  workflow_dispatch:
+  push:
+    paths: ["desktop/**"]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: npm install
+        working-directory: desktop
+      - name: Build
+        run: npx electron-builder --win --publish never
+        working-directory: desktop
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Torch-Store-Setup
+          path: desktop/dist/*.exe

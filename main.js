@@ -31,8 +31,8 @@ const CC=typeof C!="undefined"?C:{};
 let me=null,role="user",uname="",list=[];
 const isPub=()=>role=="admin"||role=="publisher";
 const toast=t=>{const e=document.createElement("div");e.className="ts";e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2800)};
-const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},85%,58%)'/><stop offset='1' stop-color='#ffd400'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
-const flame=c=>`<svg class="fl ${c||""}" viewBox="0 0 40 64" aria-hidden="true"><rect x="17" y="44" width="6" height="19" rx="2" fill="#8a5a2b"/><path d="M20 2c3 9 14 15 14 29a14 14 0 0 1-28 0c0-7 4-10 6-15 2 4 4 5 5 6 1-6 0-12 3-20z" fill="#ff7a1a"/><path d="M20 24c2 5 7 8 7 14a7 7 0 0 1-14 0c0-4 3-6 4-9 1 2 2 3 3 3z" fill="#ffd27a"/></svg>`;
+const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},70%,42%)'/><stop offset='1' stop-color='#1d2029'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
+const flame=c=>`<svg class="lg ${c||""}" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff4d1a"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgg)"/><path class="fm" d="M24 8c2 6 9 10 9 18a9 9 0 0 1-18 0c0-4 2-6 4-9 1 3 2 4 3 4 1-4 0-8 2-13z" fill="#fff"/><rect x="21.5" y="33" width="5" height="8" rx="2" fill="#fff" opacity=".85"/></svg>`;
 const modal=h=>{let m=$("#md");if(!m){m=document.createElement("div");m.id="md";m.className="md";m.onclick=e=>{if(e.target==m)m.hidden=true};document.body.append(m)}m.innerHTML=`<div class="fr box">${h}</div>`;m.hidden=false;return m};
 
 async function who(){
@@ -88,13 +88,13 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   $("#m").innerHTML='<p class="sub">جاري التحميل...</p>';
   try{await TM(who(),5000);list=await TM(prods(),5000)}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
   const keys=Object.keys(S);
-  $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span><b>Torch Store</b><small>متجر الملفات الرقمية</small></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><button class="ib" id="sb" aria-label="بحث">🔍</button><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header><div id="sr" class="fr sr" hidden><input id="q" placeholder="ابحث عن منتج..."><div id="rs"></div></div>`;
+  $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span class="wm"><b>TORCH</b><i>STORE</i></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><div class="sx"><input id="q" placeholder="ابحث عن منتج أو بلوقن أو تاب..." autocomplete="off"><div id="rs" class="rs"></div></div><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header>`;
   const bn=[["index.html","🏠","الرئيسية","home"],["box.html","📦","Box","box"],["quick.html","⚡","Quick","quick"],["scoreboard.html","🏆","Tab","scoreboard"]];
   const nb=document.createElement("nav");nb.className="bn";
   nb.innerHTML=bn.map(x=>`<a href="${x[0]}"${x[3]==pg?' class="on"':""}>${x[1]}<small>${x[2]}</small></a>`).join("")+`<button id="mn">☰<small>المزيد</small></button>`;document.body.append(nb);
   $("#mn").onclick=()=>modal(`<div class="g ct">${keys.map(k=>`<a class="bt" href="${k}.html">${S[k][2]} ${S[k][0]}</a>`).join("")}</div>`);
   $("#ac").onclick=authUI;
-  $("#sb").onclick=()=>{const b=$("#sr");b.hidden=!b.hidden;if(!b.hidden)$("#q").focus()};
+  document.addEventListener("click",e=>{if(!e.target.closest(".sx"))$("#rs").innerHTML=""});
   $("#q").oninput=e=>{const v=e.target.value.trim().toLowerCase();
     $("#rs").innerHTML=v?(list.filter(p=>(p.n+p.d).toLowerCase().includes(v)).map(p=>`<a href="contact.html?p=${p.id}"><b>${esc(p.n)}</b><small>${S[p.s]?S[p.s][1]:""}</small><i>${esc(p.p)}</i></a>`).join("")||"<p>ما لقينا منتج بهذا الاسم.</p>"):""};
 
@@ -102,7 +102,7 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   const none='<p class="sub">ما اكو منتجات بهذا القسم للحين.</p>';
   let h="";
   if(pg=="home"){
-    h=`<section class="hero">${flame("big")}<h1>Torch Store</h1><p>متجر ملفات رقمية: صناديق وتاب وبلوقنات وسيرفرات جاهزة. اختر قسمك وابدأ.</p><div class="orn">❦ ✦ ❦</div></section><div class="g">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p></a>`).join("")}</div><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
+    h=`<section class="hero fr"><div class="hc"><span class="chip">🔥 المتجر الرسمي</span><h1>ملفات وأدوات جاهزة<br>لسيرفرك ومشروعك</h1><p>صناديق وتاب وسكوربورد وبلوقنات وسيرفرات جاهزة من ناشرين معتمدين.</p><div class="ha"><a class="bt" href="box.html">تصفّح المنتجات</a><a class="bt ghost" href="publish.html">انشر منتجك</a></div><div class="stats"><div><b>${list.length}</b><small>منتج</small></div><div><b>5</b><small>أقسام</small></div><div><b>80%</b><small>ربح الناشر</small></div></div></div><div class="hv">${flame("big")}</div></section><h2 class="ti">الأقسام</h2><div class="g cats">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p></a>`).join("")}</div><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
   }else if(pg=="news"){h=head+news();}
   else if(pg=="publish"){
     h=head+`<div class="fr box"><p>انشر منتجك عندنا وتوصلك <b>80%</b> من كل بيع، والمتجر ياخذ <b>20%</b>.</p><label>سعر منتجك بالدولار<input id="cp" type="number" min="0" value="10"></label><div class="split"><div><small>تربح أنت 80%</small><b id="o">8</b>$</div><div><small>المتجر 20%</small><b id="s">2</b>$</div></div></div>`;

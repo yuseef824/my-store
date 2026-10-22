@@ -1,0 +1,16 @@
+{
+  "name": "torch-store",
+  "version": "1.0.0",
+  "description": "Torch Store",
+  "main": "main.js",
+  "author": "Torch Store",
+  "scripts": { "start": "electron .", "build": "electron-builder --win --publish never" },
+  "devDependencies": { "electron": "^33.2.0", "electron-builder": "^25.1.8" },
+  "build": {
+    "appId": "com.torch.store",
+    "productName": "Torch Store",
+    "files": ["main.js", "offline.html", "icon.png"],
+    "win": { "target": "nsis", "icon": "icon.ico" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
+  }
+}
