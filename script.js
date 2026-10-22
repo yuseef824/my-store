@@ -19,5 +19,3 @@ products.forEach((p, i) => {
   `;
   grid.appendChild(card);
 });
-
-{ name: "Blog Pack", desc: "Ready-made blog templates.", price: "$8", tag: "Hot" }
