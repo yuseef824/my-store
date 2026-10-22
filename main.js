@@ -49,9 +49,17 @@ async function prods(){
 const card=p=>`<article class="fr pc"><img src="${p.img?esc(p.img):art(S[p.s]?S[p.s][2]:"🔥",p.id)}" alt="${esc(p.n)}"><div><h3>${esc(p.n)}</h3>${p.by?`<small>بواسطة ${esc(p.by)}</small>`:""}<p>${esc(p.d)}</p><div class="row"><b>${esc(p.p)}</b><span><button class="lk${p.liked?" on":""}" data-l="${p.id}">♥ ${p.likes||0}</button> <button class="cm" data-c="${p.id}">💬</button>${me&&(role=="admin"||p.own==me.id)?` <button class="dl" data-d="${p.id}">🗑</button>`:""}</span></div><a class="bt" href="contact.html?p=${p.id}">شراء Buy</a><div class="cb" id="c${p.id}" hidden></div></div></article>`;
 const news=n=>N.slice(0,n||N.length).map(x=>`<div class="fr news"><small>${x[0]}</small><p>${esc(x[1])}</p></div>`).join("");
 
-function authUI(){
+async function authUI(){
   if(!sb)return modal("<p>الحسابات تحتاج ربط Supabase. افتح config.js وحط المفاتيح.</p>");
-  if(me){modal(`<p>أهلاً <b>${esc(uname)}</b> (${role})</p><button class="bt" id="lo">تسجيل خروج</button>`);$("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};return}
+  if(me){
+    let adm="";
+    if(role=="admin"){const{data}=await sb.from("publishers").select("email");
+      adm=`<h3>الناشرون</h3><input id="re" type="email" placeholder="إيميل الناشر الجديد"><button class="bt" data-r="add">إضافة ناشر</button><div>${(data||[]).map(x=>`<p class="cmt">${esc(x.email)} <button class="dl" data-rm="${esc(x.email)}">حذف</button></p>`).join("")||'<p class="cmt">ما اكو ناشرين للحين.</p>'}</div>`}
+    modal(`<h3>⚙️ الإعدادات</h3><p>${esc(me.email)} (${role=="admin"?"أدمن":role=="publisher"?"ناشر":"مستخدم"})</p><label>اسمك<input id="sn" value="${esc(uname)}"></label><button class="bt" id="sv">حفظ الاسم</button><label>كلمة سر جديدة<input id="sp" type="password" minlength="6"></label><button class="bt" id="spb">تغيير كلمة السر</button>${adm}<p></p><button class="bt" id="lo">تسجيل خروج</button>`);
+    $("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};
+    $("#sv").onclick=async()=>{const n=$("#sn").value.trim();if(!n)return;const r=await sb.from("profiles").update({name:n}).eq("id",me.id);if(r.error)return toast(r.error.message);uname=n;toast("تم الحفظ ✅")};
+    $("#spb").onclick=async()=>{const r=await sb.auth.updateUser({password:$("#sp").value});toast(r.error?r.error.message:"تم تغيير كلمة السر ✅")};
+    return}
   modal(`<h3>حسابك</h3><label>الاسم (للحساب الجديد)<input id="an"></label><label>الإيميل<input id="ae" type="email"></label><label>كلمة السر<input id="ap" type="password"></label><div class="row"><button class="bt" id="li">دخول</button><button class="bt" id="su">حساب جديد</button></div>`);
   const go=async up=>{const e=$("#ae").value,p=$("#ap").value;
     const r=up?await sb.auth.signUp({email:e,password:p,options:{data:{name:$("#an").value||e.split("@")[0]}}}):await sb.auth.signInWithPassword({email:e,password:p});
@@ -71,7 +79,8 @@ document.addEventListener("click",async e=>{
   if(d.s){const i=$("#i"+d.s);if(!me)return authUI();if(!i.value.trim())return;
     const r=await sb.from("comments").insert({product_id:d.s,user_id:me.id,user_name:uname,body:i.value.trim()});if(r.error)return toast(r.error.message);loadC(d.s)}
   if(d.d&&confirm("حذف المنتج؟")){const r=await sb.from("products").delete().eq("id",d.d);r.error?toast(r.error.message):location.reload()}
-  if(d.r){const r=await sb.rpc("set_role",{e:$("#re").value.trim(),r:d.r});toast(r.error?r.error.message:"تم ✅")}
+  if(d.r){const em=$("#re").value.trim();if(!em)return;const r=await sb.rpc("add_publisher",{e:em});toast(r.error?r.error.message:"تمت الإضافة ✅");if(!r.error)authUI()}
+  if(d.rm){const r=await sb.rpc("remove_publisher",{e:d.rm});toast(r.error?r.error.message:"تم الحذف");if(!r.error)authUI()}
 });
 
 const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("انتهت مهلة الاتصال بـ Supabase، تحقق من config.js")),ms))]);
@@ -97,9 +106,8 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   }else if(pg=="news"){h=head+news();}
   else if(pg=="publish"){
     h=head+`<div class="fr box"><p>انشر منتجك عندنا وتوصلك <b>80%</b> من كل بيع، والمتجر ياخذ <b>20%</b>.</p><label>سعر منتجك بالدولار<input id="cp" type="number" min="0" value="10"></label><div class="split"><div><small>تربح أنت 80%</small><b id="o">8</b>$</div><div><small>المتجر 20%</small><b id="s">2</b>$</div></div></div>`;
-    if(isPub())h+=`<form class="fr box" id="pf"><h3>انشر منتج جديد</h3><select name="sec">${["box","quick","scoreboard","blogs","server"].map(k=>`<option value="${k}">${S[k][0]}</option>`).join("")}</select><input name="nm" placeholder="اسم المنتج" required><textarea name="ds" rows="3" placeholder="وصف المنتج" required></textarea><input name="pc" placeholder="السعر مثل 5$" required><label>صورة المنتج<input name="im" type="file" accept="image/*"></label><button class="bt">نشر</button></form>`;
-    else h+=`<div class="fr box"><p>${me?"حسابك مو ناشر حالياً. راسلنا ونضيفك كناشر.":"سجّل دخول حتى تقدر تنشر."}</p>${me?'<a class="bt" href="contact.html?p=publish">راسلنا</a>':""}</div>`;
-    if(role=="admin")h+=`<div class="fr box"><h3>إدارة الناشرين</h3><input id="re" type="email" placeholder="إيميل الشخص"><div class="row"><button class="bt" data-r="publisher">اجعله ناشر</button><button class="bt" data-r="user">أزل الصلاحية</button></div></div>`;
+    if(isPub())h+=`<form class="fr box" id="pf"><h3>انشر منتج جديد</h3><select name="sec">${["box","quick","scoreboard","blogs","server"].map(k=>`<option value="${k}">${S[k][0]}</option>`).join("")}</select><input name="nm" placeholder="اسم المنتج" required><textarea name="ds" rows="3" placeholder="وصف المنتج" required></textarea><input name="pc" placeholder="السعر مثل 5$" required><label>صورة المنتج (إجبارية)<input name="im" type="file" accept="image/*" required></label><button class="bt">نشر</button></form>`;
+    else h+=`<div class="fr box"><p>${me?"النشر للناشرين المعتمدين فقط. راسلنا ونضيفك.":"سجّل دخول حتى تقدر تنشر."}</p>${me?'<a class="bt" href="contact.html?p=publish">راسلنا</a>':""}</div>`;
   }else if(pg=="contact"){
     const id=new URLSearchParams(location.search).get("p");
     const it=id=="publish"?{n:"طلب صلاحية نشر",p:""}:list.find(x=>String(x.id)==id)||{n:"استفسار عام",p:""};
@@ -113,8 +121,8 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
 
   if(pg=="publish"){
     $("#cp").oninput=e=>{const v=+e.target.value||0;$("#o").textContent=+(v*.8).toFixed(2);$("#s").textContent=+(v*.2).toFixed(2)};
-    const f=$("#pf");if(f)f.onsubmit=async e=>{e.preventDefault();const file=f.im.files[0];let url=null;
-      if(file){const path=Date.now()+"-"+file.name.replace(/[^\w.]/g,"_");const u=await sb.storage.from("images").upload(path,file);if(u.error)return toast(u.error.message);url=sb.storage.from("images").getPublicUrl(path).data.publicUrl}
+    const f=$("#pf");if(f)f.onsubmit=async e=>{e.preventDefault();const file=f.im.files[0];let url=null;if(!file)return toast("لازم تضيف صورة للمنتج");if(file.size>3e6)return toast("الصورة كبيرة، الحد 3MB");
+      {const path=Date.now()+"-"+file.name.replace(/[^\w.]/g,"_");const u=await sb.storage.from("images").upload(path,file);if(u.error)return toast(u.error.message);url=sb.storage.from("images").getPublicUrl(path).data.publicUrl}
       const r=await sb.from("products").insert({section:f.sec.value,name:f.nm.value,descr:f.ds.value,price:f.pc.value,image_url:url,owner:me.id,owner_name:uname});
       if(r.error)return toast(r.error.message);toast("تم النشر ✅");f.reset()};
   }

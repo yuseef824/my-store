@@ -91,3 +91,4 @@ footer{text-align:center;padding:1rem;font-size:.85rem;font-weight:600;opacity:.
 :focus-visible{outline:3px solid var(--y);outline-offset:2px}
 @media(max-width:760px){.top nav{display:none}.top .ib:first-of-type{margin-inline-start:auto}.bn{display:flex}.brand small{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.md .box{max-height:90vh;overflow:auto}
