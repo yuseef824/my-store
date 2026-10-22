@@ -90,3 +90,63 @@ body {
 @keyframes shine {
   to { background-position: 200% center; }
 }
+
+/* شارة صغيرة فوق اسم المنتج */
+.tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* إطار متوهج عند مرور الماوس */
+.card { position: relative; overflow: hidden; }
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  pointer-events: none;
+}
+
+.card:hover::after {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 20px rgba(124, 92, 255, 0.25);
+}
+
+/* الشعار يطفو لأعلى وأسفل */
+.flame {
+  font-size: 3rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* وصف الموقع تحت العنوان */
+.subtitle {
+  max-width: 560px;
+  margin-top: 0.8rem;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.footer {
+  text-align: center;
+  padding: 2rem;
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
