@@ -31,7 +31,7 @@ const CC=typeof C!="undefined"?C:{};
 let me=null,role="user",uname="",list=[];
 const isPub=()=>role=="admin"||role=="publisher";
 const toast=t=>{const e=document.createElement("div");e.className="ts";e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2800)};
-const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},60%,30%)'/><stop offset='1' stop-color='#1a110c'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
+const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},85%,58%)'/><stop offset='1' stop-color='#ffd400'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
 const flame=c=>`<svg class="fl ${c||""}" viewBox="0 0 40 64" aria-hidden="true"><rect x="17" y="44" width="6" height="19" rx="2" fill="#8a5a2b"/><path d="M20 2c3 9 14 15 14 29a14 14 0 0 1-28 0c0-7 4-10 6-15 2 4 4 5 5 6 1-6 0-12 3-20z" fill="#ff7a1a"/><path d="M20 24c2 5 7 8 7 14a7 7 0 0 1-14 0c0-4 3-6 4-9 1 2 2 3 3 3z" fill="#ffd27a"/></svg>`;
 const modal=h=>{let m=$("#md");if(!m){m=document.createElement("div");m.id="md";m.className="md";m.onclick=e=>{if(e.target==m)m.hidden=true};document.body.append(m)}m.innerHTML=`<div class="fr box">${h}</div>`;m.hidden=false;return m};
 
@@ -120,13 +120,5 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   }
 })();
 
-/* جمر بالخلفية */
-if(!matchMedia("(prefers-reduced-motion:reduce)").matches){
-  const c=document.createElement("canvas");c.id="em";document.body.prepend(c);
-  const x=c.getContext("2d");let W,H;const R=()=>{W=c.width=innerWidth;H=c.height=innerHeight};R();addEventListener("resize",R);
-  const E=Array.from({length:45},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.8+.5,v:Math.random()*.6+.2,a:Math.random()}));
-  (function L(){x.clearRect(0,0,W,H);E.forEach(e=>{e.y-=e.v;e.x+=Math.sin(e.y/40)*.4;if(e.y<-5){e.y=H+5;e.x=Math.random()*W}
-  x.fillStyle=`rgba(255,${120+e.a*80|0},40,${.25+e.a*.5})`;x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});requestAnimationFrame(L)})();
-}
 /* تطبيق قابل للتثبيت */
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js");
