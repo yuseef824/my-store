@@ -92,3 +92,4 @@ document.querySelector(".btn").addEventListener("click", (e) => {
   e.preventDefault();
   document.getElementById("products").scrollIntoView({ behavior: "smooth" });
 });
+{ name: "Blog Pack", desc: "Ready-made blog templates.", price: "$8", tag: "Hot" }
