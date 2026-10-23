@@ -74,11 +74,21 @@ const loadC=async id=>{const{data}=await sb.from("comments").select("*").eq("pro
 
 
 const bad=x=>!x||/YOUR|XXXX/.test(x);
-const fx={wa:v=>/^https?:/.test(v)?v:"https://wa.me/"+v.replace(/\D/g,""),tg:v=>/^https?:/.test(v)?v:"https://t.me/"+v.replace(/^@/,""),dc:v=>/^https?:/.test(v)?v:"https://discord.com/users/"+v,tk:v=>/^https?:/.test(v)?v:"https://www.tiktok.com/@"+v.replace(/^@/,"")};
-const pick=(k,ck)=>{const v=(ST[k]||"").trim()||(CC[ck]||"");return bad(v)?"":fx[k](v)};
+const AC=[
+["wa","WhatsApp","💬","9647701234567",v=>/^https?:/.test(v)?v:"https://wa.me/"+v.replace(/\D/g,""),1,"whatsapp"],
+["tg","Telegram","✈️","username",v=>/^https?:/.test(v)?v:"https://t.me/"+v.replace(/^@/,""),1,"telegram"],
+["dc","Discord","🎮","https://discord.gg/...",v=>/^https?:/.test(v)?v:"https://discord.com/users/"+v,0,"discord"],
+["tk","TikTok","🎵","username",v=>/^https?:/.test(v)?v:"https://www.tiktok.com/@"+v.replace(/^@/,""),0,"tiktok"],
+["ig","Instagram","📸","username",v=>/^https?:/.test(v)?v:"https://instagram.com/"+v.replace(/^@/,""),0],
+["sc","Snapchat","👻","username",v=>/^https?:/.test(v)?v:"https://www.snapchat.com/add/"+v.replace(/^@/,""),0],
+["fb","Facebook","📘","اسم الصفحة أو الرابط",v=>/^https?:/.test(v)?v:"https://facebook.com/"+v,0],
+["yt","YouTube","▶️","@channel أو الرابط",v=>/^https?:/.test(v)?v:"https://youtube.com/"+(v[0]=="@"?v:"@"+v),0],
+["tw","X (Twitter)","✖️","username",v=>/^https?:/.test(v)?v:"https://x.com/"+v.replace(/^@/,""),0],
+["em","Email","✉️","name@example.com",v=>"mailto:"+v,2]];
+const pick=a=>{const v=(ST[a[0]]||"").trim()||(CC[a[6]]||"");return bad(v)?"":a[4](v)};
 async function loadST(){if(!sb)return;const r=await sb.from("store_settings").select("*").eq("id",1).maybeSingle();ST=r.data||{}}
-const acct=()=>`<h3>حسابات المراسلة</h3><p class="cmt">تظهر للمشتري بعد الضغط على شراء.</p><label>واتساب (رقم مع كود الدولة)<input id="aw" value="${esc(ST.wa)}" placeholder="9647701234567"></label><label>تلي (اسم المستخدم)<input id="at" value="${esc(ST.tg)}" placeholder="username"></label><label>ديسكورد (رابط دعوة أو ID)<input id="ad" value="${esc(ST.dc)}" placeholder="https://discord.gg/..."></label><label>تيك توك (اسم المستخدم)<input id="ak" value="${esc(ST.tk)}" placeholder="username"></label><button class="bt" id="sa">حفظ الحسابات</button>`;
-async function saveAcc(){const v={id:1,wa:$("#aw").value.trim(),tg:$("#at").value.trim(),dc:$("#ad").value.trim(),tk:$("#ak").value.trim()};const r=await sb.from("store_settings").upsert(v);if(r.error)return toast(r.error.message);ST=v;toast("تم حفظ الحسابات ✅")}
+const acct=()=>`<h3>حسابات المراسلة</h3><p class="cmt">تظهر للمشتري بعد الضغط على شراء. اترك الخانة فاضية إذا ما تريد تظهر.</p>${AC.map(a=>`<label>${a[1]}<input data-a="${a[0]}" value="${esc(ST[a[0]])}" placeholder="${a[3]}"></label>`).join("")}<button class="bt" id="sa">حفظ الحسابات</button>`;
+async function saveAcc(){const v={id:1};document.querySelectorAll("[data-a]").forEach(i=>v[i.dataset.a]=i.value.trim());const r=await sb.from("store_settings").upsert(v);if(r.error)return toast(r.error.message);ST=v;toast("تم حفظ الحسابات ✅")}
 function openPub(sec){modal(`<form id="pm"><h3>نشر منتج في ${S[sec][0]}</h3><input name="nm" placeholder="اسم المنتج" required><textarea name="ds" rows="3" placeholder="وصف المنتج" required></textarea><input name="pc" placeholder="السعر مثل 5$" required><label>صورة المنتج (إجبارية)<input name="im" type="file" accept="image/*" required></label><button class="bt">نشر</button></form>`);$("#pm").onsubmit=e=>doPub(e,sec)}
 async function doPub(e,sec){e.preventDefault();const f=e.target,file=f.im.files[0];
   if(!file)return toast("لازم تضيف صورة للمنتج");if(file.size>3e6)return toast("الصورة كبيرة، الحد 3MB");
@@ -99,6 +109,21 @@ document.addEventListener("click",async e=>{
   if(d.rm){const r=await sb.rpc("remove_publisher",{e:d.rm});toast(r.error?r.error.message:"تم الحذف");if(!r.error)authUI()}
 });
 
+const wd=(t,o=0)=>t.split(" ").map((w,i)=>`<span style="--i:${i+o}">${w}</span>`).join(" ");
+function fx(){
+  const els=[...document.querySelectorAll(".cd,.pc,.news,.cta,.ti")];
+  const calm=matchMedia("(prefers-reduced-motion:reduce)").matches||!("IntersectionObserver"in window);
+  els.forEach(e=>{e.style.animation="none";if(!calm)e.setAttribute("data-r","")});
+  if(!calm){const io=new IntersectionObserver(a=>a.forEach(x=>{if(x.isIntersecting){const t=x.target;t.classList.add("in");io.unobserve(t);setTimeout(()=>{t.removeAttribute("data-r");t.classList.remove("in")},1000)}}),{threshold:.12});els.forEach(e=>io.observe(e))}
+  const st=$("#stm"),br=$("#bigring"),em=$("#em2");
+  const ws=st?[...st.children]:[];
+  const f=()=>{
+    if(st){const r=st.getBoundingClientRect(),p=Math.min(1,Math.max(0,(innerHeight*.85-r.top)/(innerHeight*.55)));ws.forEach((w,i)=>w.style.opacity=(.15+.85*Math.min(1,Math.max(0,p*ws.length*1.1-i))).toFixed(2))}
+    if(br){const r=br.getBoundingClientRect();br.style.setProperty("--t",Math.min(1,Math.max(0,(innerHeight-r.top)/(innerHeight+r.height))).toFixed(3))}
+  };
+  f();addEventListener("scroll",f,{passive:true});
+  if(em&&!calm)addEventListener("pointermove",e=>{em.style.transform=`translate(${((e.clientX/innerWidth-.5)*26).toFixed(1)}px,${((e.clientY/innerHeight-.5)*26).toFixed(1)}px)`});
+}
 const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("انتهت مهلة الاتصال بـ Supabase، تحقق من config.js")),ms))]);
 (async()=>{
   $("#m").innerHTML='<p class="sub">جاري التحميل...</p>';
@@ -118,7 +143,7 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   const none='<p class="sub">ما اكو منتجات بهذا القسم للحين.</p>';
   let h="";
   if(pg=="home"){
-    h=`<section class="hero"><div class="hc"><span class="chip">● متجر Torch الرسمي</span><h1>ملفات وأدوات <span class="gr">جاهزة</span><br>تعطي سيرفرك الأفضلية</h1><p>صناديق وتاب وسكوربورد وبلوقنات وسيرفرات جاهزة من ناشرين معتمدين. اختر، اضغط شراء، وراسلنا.</p><div class="ha"><a class="bt" href="box.html">تصفّح المنتجات</a><a class="bt ghost" href="publish.html">انشر منتجك</a></div><div class="stats"><div><b>${list.length}</b><small>منتج</small></div><div><b>5</b><small>أقسام</small></div><div><b>80%</b><small>ربح الناشر</small></div></div></div><div class="hv">${art2()}</div></section><h2 class="ti">الأقسام</h2><p class="sub">اختر القسم اللي يناسبك</p><div class="g cats">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p><em class="go">تصفّح ←</em></a>`).join("")}</div><section class="cta"><div><h2>تريد تنشر منتجك وتربح؟</h2><p>كن ناشراً معتمداً واربح 80% من كل عملية بيع.</p><a class="bt" href="publish.html">ابدأ النشر</a></div><div class="cv">${art2()}</div></section><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
+    h=`<section class="hero hero2"><div class="em" id="em2"><i class="ring r1"></i><i class="ring r2"></i><i class="ring r3"></i>${flame()}</div><span class="chip">● متجر Torch الرسمي</span><h1 class="kt">${wd("ملفات وأدوات")} <span class="gr" style="--i:2">جاهزة</span><br>${wd("تعطي سيرفرك الأفضلية",3)}</h1><p>صناديق وتاب وسكوربورد وبلوقنات وسيرفرات جاهزة من ناشرين معتمدين. اختر، اضغط شراء، وراسلنا.</p><div class="ha"><a class="bt" href="box.html">تصفّح المنتجات</a><a class="bt ghost" href="publish.html">انشر منتجك</a></div><div class="stats"><div><b>${list.length}</b><small>منتج</small></div><div><b>5</b><small>أقسام</small></div><div><b>80%</b><small>ربح الناشر</small></div></div></section><div class="mq"><div>${keys.concat(keys).map(k=>`<span>${S[k][2]} ${S[k][0]}</span>`).join("")}</div></div><section class="stm"><p id="stm">${"بين فكرتك وملفاتك الجاهزة فجوة، ونحن نسدّها بمنتجات جاهزة وناشرين معتمدين وتسليم سريع.".split(" ").map(w=>`<span>${w}</span>`).join(" ")}</p></section><section class="rgs"><div class="bigring" id="bigring"><i></i><i></i><b>اقفل الفجوة</b></div><a class="bt" href="box.html">ابدأ الآن</a></section><h2 class="ti">الأقسام</h2><p class="sub">اختر القسم اللي يناسبك</p><div class="g cats">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p><em class="go">تصفّح ←</em></a>`).join("")}</div><section class="cta"><div><h2>تريد تنشر منتجك وتربح؟</h2><p>كن ناشراً معتمداً واربح 80% من كل عملية بيع.</p><a class="bt" href="publish.html">ابدأ النشر</a></div><div class="cv">${art2()}</div></section><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
   }else if(pg=="news"){h=head+news();}
   else if(pg=="publish"){
     h=head+`<div class="fr box"><p>انشر منتجك عندنا وتوصلك <b>80%</b> من كل بيع، والمتجر ياخذ <b>20%</b>.</p><label>سعر منتجك بالدولار<input id="cp" type="number" min="0" value="10"></label><div class="split"><div><small>تربح أنت 80%</small><b id="o">8</b>$</div><div><small>المتجر 20%</small><b id="s">2</b>$</div></div></div>`;
@@ -128,12 +153,11 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
     const id=new URLSearchParams(location.search).get("p");
     const it=id=="publish"?{n:"طلب صلاحية نشر",p:""}:list.find(x=>String(x.id)==id)||{n:"استفسار عام",p:""};
     const msg=`مرحباً Torch Store، أريد: ${it.n} ${it.p}`.trim(),q=encodeURIComponent(msg);
-    const A=[["WhatsApp","💬",pick("wa","whatsapp"),1],["Telegram","✈️",pick("tg","telegram"),1],["Discord","🎮",pick("dc","discord"),0],["TikTok","🎵",pick("tk","tiktok"),0]];
-    const T=A.filter(x=>x[2]).map(x=>[x[0],x[1],x[2]+(x[3]?(x[2].includes("?")?"&":"?")+"text="+q:"")]);
+    const T=AC.map(a=>[a[1],a[2],pick(a),a[5]]).filter(x=>x[2]).map(x=>[x[0],x[1],x[2]+(x[3]==1?(x[2].includes("?")?"&":"?")+"text="+q:x[3]==2?"?subject="+encodeURIComponent("Torch Store")+"&body="+q:"")]);
     h=`<h1 class="ti">راسلنا</h1><div class="fr box"><p>طلبك: <b>${esc(it.n)}</b> ${esc(it.p)}</p><p>اختر وين تحب تراسلني:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")||"<p>حسابات المراسلة لم تُضف بعد.</p>"}</div><small>عند الضغط تُنسخ رسالتك تلقائياً، الصقها في المحادثة.</small></div>`;
     setTimeout(()=>document.querySelectorAll("[data-cp]").forEach(a=>a.addEventListener("click",()=>{try{navigator.clipboard.writeText(msg)}catch(_){}})));
   }else{h=head+(isPub()?`<button class="bt" data-np="${pg}">➕ نشر منتج في هذا القسم</button>`:"")+`<div class="g">${list.filter(p=>p.s==pg).map(card).join("")||none}</div>`;}
-  $("#m").innerHTML=h;
+  $("#m").innerHTML=h;if(pg=="home")fx();
   document.title="Torch Store"+(S[pg]?" | "+S[pg][0]:"");
 
   if(pg=="publish"){
