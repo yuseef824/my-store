@@ -95,3 +95,6 @@ drop policy if exists "admin write settings" on store_settings;
 create policy "read settings" on store_settings for select using(true);
 create policy "admin write settings" on store_settings for all using(is_admin()) with check(is_admin());
 insert into store_settings(id) values(1) on conflict do nothing;
+
+-- باقي حسابات المراسلة
+alter table store_settings add column if not exists ig text, add column if not exists sc text, add column if not exists fb text, add column if not exists yt text, add column if not exists tw text, add column if not exists em text;
