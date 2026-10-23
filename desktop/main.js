@@ -10,7 +10,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   const win = new BrowserWindow({
     width: 1280, height: 800, minWidth: 420, minHeight: 600,
-    backgroundColor: "#0d0e12", title: "Torch Store",
+    backgroundColor: "#080c0a", title: "Torch Store",
     icon: path.join(__dirname, "icon.png"),
     webPreferences: { contextIsolation: true, nodeIntegration: false }
   });

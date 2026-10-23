@@ -28,11 +28,12 @@ const $=s=>document.querySelector(s),pg=document.body.dataset.page||"home";
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let sb=null;try{if(window.supabase&&typeof SB_URL!="undefined"&&!SB_URL.includes("YOUR"))sb=supabase.createClient(SB_URL,SB_KEY)}catch(err){showErr(err.message)}
 const CC=typeof C!="undefined"?C:{};
-let me=null,role="user",uname="",list=[];
+let me=null,role="user",uname="",list=[],ST={};
 const isPub=()=>role=="admin"||role=="publisher";
 const toast=t=>{const e=document.createElement("div");e.className="ts";e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),2800)};
-const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*67)%360},70%,42%)'/><stop offset='1' stop-color='#1d2029'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
-const flame=c=>`<svg class="lg ${c||""}" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff4d1a"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgg)"/><path class="fm" d="M24 8c2 6 9 10 9 18a9 9 0 0 1-18 0c0-4 2-6 4-9 1 3 2 4 3 4 1-4 0-8 2-13z" fill="#fff"/><rect x="21.5" y="33" width="5" height="8" rx="2" fill="#fff" opacity=".85"/></svg>`;
+const art=(t,id)=>"data:image/svg+xml,"+encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 180'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='hsl(${([...String(id)].reduce((a,c)=>a+c.charCodeAt(0),0)*29)%80+110},60%,26%)'/><stop offset='1' stop-color='#0a0f0d'/></linearGradient></defs><rect width='300' height='180' fill='url(#g)'/><text x='150' y='115' font-size='72' text-anchor='middle'>${t}</text></svg>`);
+const flame=c=>`<svg class="lg" viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="lgg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4ade80"/><stop offset="1" stop-color="#15803d"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#lgg)"/><path d="M13 14h22v6h-8v16h-6V20h-8z" fill="#04140a"/></svg>`;
+const art2=()=>`<svg class="ha2" viewBox="0 0 360 320" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2a22"/><stop offset="1" stop-color="#0e1411"/></linearGradient><radialGradient id="gl"><stop offset="0" stop-color="#22c55e" stop-opacity=".45"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></radialGradient></defs><circle cx="180" cy="170" r="150" fill="url(#gl)"/>${[0,1,2].map(i=>`<g class="sv" style="animation-delay:${-i*.8}s"><rect x="70" y="${70+i*76}" width="220" height="62" rx="14" fill="url(#sg)" stroke="#22c55e" stroke-opacity=".5"/><circle cx="98" cy="${101+i*76}" r="6" fill="#22c55e"/><circle cx="120" cy="${101+i*76}" r="6" fill="#4ade80" opacity=".6"/><rect x="170" y="${95+i*76}" width="96" height="12" rx="6" fill="#22c55e" opacity=".25"/></g>`).join("")}<rect class="cu" x="278" y="44" width="34" height="34" rx="8" fill="#22c55e"/><rect class="cu b" x="40" y="236" width="26" height="26" rx="7" fill="#4ade80" opacity=".8"/></svg>`;
 const modal=h=>{let m=$("#md");if(!m){m=document.createElement("div");m.id="md";m.className="md";m.onclick=e=>{if(e.target==m)m.hidden=true};document.body.append(m)}m.innerHTML=`<div class="fr box">${h}</div>`;m.hidden=false;return m};
 
 async function who(){
@@ -54,9 +55,10 @@ async function authUI(){
   if(me){
     let adm="";
     if(role=="admin"){const{data}=await sb.from("publishers").select("email");
-      adm=`<h3>الناشرون</h3><input id="re" type="email" placeholder="إيميل الناشر الجديد"><button class="bt" data-r="add">إضافة ناشر</button><div>${(data||[]).map(x=>`<p class="cmt">${esc(x.email)} <button class="dl" data-rm="${esc(x.email)}">حذف</button></p>`).join("")||'<p class="cmt">ما اكو ناشرين للحين.</p>'}</div>`}
+      adm=`${acct()}<h3>الناشرون</h3><input id="re" type="email" placeholder="إيميل الناشر الجديد"><button class="bt" data-r="add">إضافة ناشر</button><div>${(data||[]).map(x=>`<p class="cmt">${esc(x.email)} <button class="dl" data-rm="${esc(x.email)}">حذف</button></p>`).join("")||'<p class="cmt">ما اكو ناشرين للحين.</p>'}</div>`}
     modal(`<h3>⚙️ الإعدادات</h3><p>${esc(me.email)} (${role=="admin"?"أدمن":role=="publisher"?"ناشر":"مستخدم"})</p><label>اسمك<input id="sn" value="${esc(uname)}"></label><button class="bt" id="sv">حفظ الاسم</button><label>كلمة سر جديدة<input id="sp" type="password" minlength="6"></label><button class="bt" id="spb">تغيير كلمة السر</button>${adm}<p></p><button class="bt" id="lo">تسجيل خروج</button>`);
     $("#lo").onclick=async()=>{await sb.auth.signOut();location.reload()};
+    if($("#sa"))$("#sa").onclick=saveAcc;
     $("#sv").onclick=async()=>{const n=$("#sn").value.trim();if(!n)return;const r=await sb.from("profiles").update({name:n}).eq("id",me.id);if(r.error)return toast(r.error.message);uname=n;toast("تم الحفظ ✅")};
     $("#spb").onclick=async()=>{const r=await sb.auth.updateUser({password:$("#sp").value});toast(r.error?r.error.message:"تم تغيير كلمة السر ✅")};
     return}
@@ -70,8 +72,22 @@ async function authUI(){
 const loadC=async id=>{const{data}=await sb.from("comments").select("*").eq("product_id",id).order("created_at");
   $("#c"+id).innerHTML=(data||[]).map(c=>`<p class="cmt"><b>${esc(c.user_name)}</b> ${esc(c.body)}</p>`).join("")+`<div class="row"><input id="i${id}" placeholder="اكتب تعليق...">&nbsp;<button class="bt" data-s="${id}">إرسال</button></div>`};
 
+
+const bad=x=>!x||/YOUR|XXXX/.test(x);
+const fx={wa:v=>/^https?:/.test(v)?v:"https://wa.me/"+v.replace(/\D/g,""),tg:v=>/^https?:/.test(v)?v:"https://t.me/"+v.replace(/^@/,""),dc:v=>/^https?:/.test(v)?v:"https://discord.com/users/"+v,tk:v=>/^https?:/.test(v)?v:"https://www.tiktok.com/@"+v.replace(/^@/,"")};
+const pick=(k,ck)=>{const v=(ST[k]||"").trim()||(CC[ck]||"");return bad(v)?"":fx[k](v)};
+async function loadST(){if(!sb)return;const r=await sb.from("store_settings").select("*").eq("id",1).maybeSingle();ST=r.data||{}}
+const acct=()=>`<h3>حسابات المراسلة</h3><p class="cmt">تظهر للمشتري بعد الضغط على شراء.</p><label>واتساب (رقم مع كود الدولة)<input id="aw" value="${esc(ST.wa)}" placeholder="9647701234567"></label><label>تلي (اسم المستخدم)<input id="at" value="${esc(ST.tg)}" placeholder="username"></label><label>ديسكورد (رابط دعوة أو ID)<input id="ad" value="${esc(ST.dc)}" placeholder="https://discord.gg/..."></label><label>تيك توك (اسم المستخدم)<input id="ak" value="${esc(ST.tk)}" placeholder="username"></label><button class="bt" id="sa">حفظ الحسابات</button>`;
+async function saveAcc(){const v={id:1,wa:$("#aw").value.trim(),tg:$("#at").value.trim(),dc:$("#ad").value.trim(),tk:$("#ak").value.trim()};const r=await sb.from("store_settings").upsert(v);if(r.error)return toast(r.error.message);ST=v;toast("تم حفظ الحسابات ✅")}
+function openPub(sec){modal(`<form id="pm"><h3>نشر منتج في ${S[sec][0]}</h3><input name="nm" placeholder="اسم المنتج" required><textarea name="ds" rows="3" placeholder="وصف المنتج" required></textarea><input name="pc" placeholder="السعر مثل 5$" required><label>صورة المنتج (إجبارية)<input name="im" type="file" accept="image/*" required></label><button class="bt">نشر</button></form>`);$("#pm").onsubmit=e=>doPub(e,sec)}
+async function doPub(e,sec){e.preventDefault();const f=e.target,file=f.im.files[0];
+  if(!file)return toast("لازم تضيف صورة للمنتج");if(file.size>3e6)return toast("الصورة كبيرة، الحد 3MB");
+  const path=Date.now()+"-"+file.name.replace(/[^\w.]/g,"_");const u=await sb.storage.from("images").upload(path,file);if(u.error)return toast(u.error.message);
+  const url=sb.storage.from("images").getPublicUrl(path).data.publicUrl;
+  const r=await sb.from("products").insert({section:sec||f.sec.value,name:f.nm.value,descr:f.ds.value,price:f.pc.value,image_url:url,owner:me.id,owner_name:uname});
+  if(r.error)return toast(r.error.message);toast("تم النشر ✅");sec?location.reload():f.reset()}
 document.addEventListener("click",async e=>{
-  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset;if(d.np)return openPub(d.np);
   if(d.l){if(!me)return authUI();const on=b.classList.contains("on");
     const r=on?await sb.from("likes").delete().match({product_id:d.l,user_id:me.id}):await sb.from("likes").insert({product_id:d.l,user_id:me.id});
     if(r.error)return toast(r.error.message);b.classList.toggle("on");b.textContent="♥ "+((+b.textContent.replace(/\D/g,""))+(on?-1:1))}
@@ -86,7 +102,7 @@ document.addEventListener("click",async e=>{
 const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("انتهت مهلة الاتصال بـ Supabase، تحقق من config.js")),ms))]);
 (async()=>{
   $("#m").innerHTML='<p class="sub">جاري التحميل...</p>';
-  try{await TM(who(),5000);list=await TM(prods(),5000)}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
+  try{await TM(who(),5000);list=await TM(prods(),5000);await TM(loadST(),5000)}catch(err){showErr(err.message);sb=null;list=P.map(x=>({...x,likes:0}))}
   const keys=Object.keys(S);
   $("#hd").innerHTML=`<header class="top"><a class="brand" href="index.html">${flame()}<span class="wm"><b>TORCH</b><i>STORE</i></span></a><nav>${keys.map(k=>`<a href="${k}.html"${k==pg?' class="on"':""}>${S[k][0]}</a>`).join("")}</nav><div class="sx"><input id="q" placeholder="ابحث عن منتج أو بلوقن أو تاب..." autocomplete="off"><div id="rs" class="rs"></div></div><button class="ib" id="ac">${me?"👤 "+esc(uname):"دخول"}</button></header>`;
   const bn=[["index.html","🏠","الرئيسية","home"],["box.html","📦","Box","box"],["quick.html","⚡","Quick","quick"],["scoreboard.html","🏆","Tab","scoreboard"]];
@@ -102,7 +118,7 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
   const none='<p class="sub">ما اكو منتجات بهذا القسم للحين.</p>';
   let h="";
   if(pg=="home"){
-    h=`<section class="hero fr"><div class="hc"><span class="chip">🔥 المتجر الرسمي</span><h1>ملفات وأدوات جاهزة<br>لسيرفرك ومشروعك</h1><p>صناديق وتاب وسكوربورد وبلوقنات وسيرفرات جاهزة من ناشرين معتمدين.</p><div class="ha"><a class="bt" href="box.html">تصفّح المنتجات</a><a class="bt ghost" href="publish.html">انشر منتجك</a></div><div class="stats"><div><b>${list.length}</b><small>منتج</small></div><div><b>5</b><small>أقسام</small></div><div><b>80%</b><small>ربح الناشر</small></div></div></div><div class="hv">${flame("big")}</div></section><h2 class="ti">الأقسام</h2><div class="g cats">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p></a>`).join("")}</div><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
+    h=`<section class="hero"><div class="hc"><span class="chip">● متجر Torch الرسمي</span><h1>ملفات وأدوات <span class="gr">جاهزة</span><br>تعطي سيرفرك الأفضلية</h1><p>صناديق وتاب وسكوربورد وبلوقنات وسيرفرات جاهزة من ناشرين معتمدين. اختر، اضغط شراء، وراسلنا.</p><div class="ha"><a class="bt" href="box.html">تصفّح المنتجات</a><a class="bt ghost" href="publish.html">انشر منتجك</a></div><div class="stats"><div><b>${list.length}</b><small>منتج</small></div><div><b>5</b><small>أقسام</small></div><div><b>80%</b><small>ربح الناشر</small></div></div></div><div class="hv">${art2()}</div></section><h2 class="ti">الأقسام</h2><p class="sub">اختر القسم اللي يناسبك</p><div class="g cats">${keys.map(k=>`<a class="fr cd" href="${k}.html"><span>${S[k][2]}</span><h3>${S[k][0]}</h3><p>${S[k][1]}</p><em class="go">تصفّح ←</em></a>`).join("")}</div><section class="cta"><div><h2>تريد تنشر منتجك وتربح؟</h2><p>كن ناشراً معتمداً واربح 80% من كل عملية بيع.</p><a class="bt" href="publish.html">ابدأ النشر</a></div><div class="cv">${art2()}</div></section><h2 class="ti">جديد المتجر</h2><div class="g">${list.slice(0,4).map(card).join("")||none}</div><h2 class="ti">آخر الأخبار</h2>${news(3)}`;
   }else if(pg=="news"){h=head+news();}
   else if(pg=="publish"){
     h=head+`<div class="fr box"><p>انشر منتجك عندنا وتوصلك <b>80%</b> من كل بيع، والمتجر ياخذ <b>20%</b>.</p><label>سعر منتجك بالدولار<input id="cp" type="number" min="0" value="10"></label><div class="split"><div><small>تربح أنت 80%</small><b id="o">8</b>$</div><div><small>المتجر 20%</small><b id="s">2</b>$</div></div></div>`;
@@ -112,19 +128,17 @@ const TM=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("
     const id=new URLSearchParams(location.search).get("p");
     const it=id=="publish"?{n:"طلب صلاحية نشر",p:""}:list.find(x=>String(x.id)==id)||{n:"استفسار عام",p:""};
     const msg=`مرحباً Torch Store، أريد: ${it.n} ${it.p}`.trim(),q=encodeURIComponent(msg);
-    const T=[["WhatsApp","💬",CC.whatsapp+"?text="+q],["Telegram","✈️",CC.telegram+"?text="+q],["Discord","🎮",CC.discord],["TikTok","🎵",CC.tiktok]];
-    h=`<h1 class="ti">راسلنا</h1><div class="fr box"><p>طلبك: <b>${esc(it.n)}</b> ${esc(it.p)}</p><p>اختر وين تحب تراسلني:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")}</div><small>عند الضغط تُنسخ رسالتك تلقائياً، الصقها في المحادثة.</small></div>`;
+    const A=[["WhatsApp","💬",pick("wa","whatsapp"),1],["Telegram","✈️",pick("tg","telegram"),1],["Discord","🎮",pick("dc","discord"),0],["TikTok","🎵",pick("tk","tiktok"),0]];
+    const T=A.filter(x=>x[2]).map(x=>[x[0],x[1],x[2]+(x[3]?(x[2].includes("?")?"&":"?")+"text="+q:"")]);
+    h=`<h1 class="ti">راسلنا</h1><div class="fr box"><p>طلبك: <b>${esc(it.n)}</b> ${esc(it.p)}</p><p>اختر وين تحب تراسلني:</p><div class="g ct">${T.map(t=>`<a class="bt" target="_blank" rel="noopener" data-cp href="${t[2]}">${t[1]} ${t[0]}</a>`).join("")||"<p>حسابات المراسلة لم تُضف بعد.</p>"}</div><small>عند الضغط تُنسخ رسالتك تلقائياً، الصقها في المحادثة.</small></div>`;
     setTimeout(()=>document.querySelectorAll("[data-cp]").forEach(a=>a.addEventListener("click",()=>{try{navigator.clipboard.writeText(msg)}catch(_){}})));
-  }else{h=head+`<div class="g">${list.filter(p=>p.s==pg).map(card).join("")||none}</div>`;}
+  }else{h=head+(isPub()?`<button class="bt" data-np="${pg}">➕ نشر منتج في هذا القسم</button>`:"")+`<div class="g">${list.filter(p=>p.s==pg).map(card).join("")||none}</div>`;}
   $("#m").innerHTML=h;
   document.title="Torch Store"+(S[pg]?" | "+S[pg][0]:"");
 
   if(pg=="publish"){
     $("#cp").oninput=e=>{const v=+e.target.value||0;$("#o").textContent=+(v*.8).toFixed(2);$("#s").textContent=+(v*.2).toFixed(2)};
-    const f=$("#pf");if(f)f.onsubmit=async e=>{e.preventDefault();const file=f.im.files[0];let url=null;if(!file)return toast("لازم تضيف صورة للمنتج");if(file.size>3e6)return toast("الصورة كبيرة، الحد 3MB");
-      {const path=Date.now()+"-"+file.name.replace(/[^\w.]/g,"_");const u=await sb.storage.from("images").upload(path,file);if(u.error)return toast(u.error.message);url=sb.storage.from("images").getPublicUrl(path).data.publicUrl}
-      const r=await sb.from("products").insert({section:f.sec.value,name:f.nm.value,descr:f.ds.value,price:f.pc.value,image_url:url,owner:me.id,owner_name:uname});
-      if(r.error)return toast(r.error.message);toast("تم النشر ✅");f.reset()};
+    const f=$("#pf");if(f)f.onsubmit=e=>doPub(e);
   }
 })();
 

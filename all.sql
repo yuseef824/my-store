@@ -86,3 +86,12 @@ create policy "read images" on storage.objects for select using(bucket_id='image
 
 -- بعد ما تسجل حسابك بالموقع، شغّل هذا السطر مرة وحدة (بدّل الإيميل) وتصير أدمن:
 -- update profiles set role='admin' where email='YOUR_EMAIL';
+
+-- حسابات المراسلة تنضاف من داخل الموقع (إعدادات الأدمن)
+create table if not exists store_settings(id int primary key default 1 check(id=1),wa text,tg text,dc text,tk text);
+alter table store_settings enable row level security;
+drop policy if exists "read settings" on store_settings;
+drop policy if exists "admin write settings" on store_settings;
+create policy "read settings" on store_settings for select using(true);
+create policy "admin write settings" on store_settings for all using(is_admin()) with check(is_admin());
+insert into store_settings(id) values(1) on conflict do nothing;
